@@ -4,6 +4,52 @@ require_once 'activityemail.civix.php';
 use CRM_Activityemail_ExtensionUtil as E;
 
 /**
+ * Implements hook_civicrm_post().
+ */
+function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
+  // On Creation of an Activity
+  if ($op == 'create' && $objectName == 'Activity') {
+    // Of type X
+    // TODO Create settings page to set the activity type
+    $activityTypeID = 2;
+    $groups = ["Georgia_5"];
+    $messageTemplateID = 69;
+    if ($objectRef->activity_type_id == $activityTypeID) {
+      // Get all the members of the relevant group
+      // TODO Create settings page to set the group
+      try {
+        $pplInGroup = civicrm_api3('Contact', 'get', [
+          'sequential' => 1,
+          'return' => ["email"],
+          'group' => ['IN' => $groups],
+          'email' => ['IS NOT NULL' => 1],
+          'do_not_email' => 0,
+        ]);
+      }
+      catch (CiviCRM_API3_Exception $e) {
+        $error = $e->getMessage();
+        CRM_Core_Error::debug_log_message(ts('API Error %1', array(
+          'domain' => 'com.aghstrategies.activityemail',
+          1 => $error,
+        )));
+      }
+      if (!empty($pplInGroup['values'])) {
+        foreach ($pplInGroup['values'] as $key => $values) {
+          if (!empty($values['email'])) {
+            // Send an email to each member of the group
+            $sendTemplateParams = [
+              'messageTemplateID' => $messageTemplateID,
+              'toEmail' => $values['email'],
+            ];
+            list($sent, $subject, $message, $html) = CRM_Core_BAO_MessageTemplate::sendTemplate($sendTemplateParams);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
