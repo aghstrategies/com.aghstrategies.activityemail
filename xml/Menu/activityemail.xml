@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/activityemail</path>
+    <page_callback>CRM_Activityemail_Form_Activityemailsettings</page_callback>
+    <title>Activityemailsettings</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
+</menu>
