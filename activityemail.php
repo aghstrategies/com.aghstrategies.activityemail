@@ -44,12 +44,8 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
             // list($sent, $subject, $message, $html) = CRM_Core_BAO_MessageTemplate::sendTemplate($sendTemplateParams);
 
             // Send a copy of the activity to all contacts in the smart group
-            $mailStatus = '';
             $mailToContacts[$values['email']] = $values['id'];
             $sent = CRM_Activity_BAO_Activity::sendToAssignee($objectRef, $mailToContacts);
-            if ($sent) {
-              $mailStatus .= ts("A copy of the activity has also been sent to assignee contacts(s).");
-            }
           }
         }
       }
