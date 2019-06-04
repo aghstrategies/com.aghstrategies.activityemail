@@ -3,20 +3,36 @@
 require_once 'activityemail.civix.php';
 use CRM_Activityemail_ExtensionUtil as E;
 
+function activityemail_getsetting() {
+  $setting = NULL;
+  try {
+    $existingSetting = civicrm_api3('Setting', 'getsingle', array(
+      'sequential' => 1,
+      'return' => 'activityemail_setting',
+    ));
+  }
+  catch (CiviCRM_API3_Exception $e) {
+    $error = $e->getMessage();
+    CRM_Core_Error::debug_log_message(
+      ts('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.activityemail'))
+    );
+  }
+  if (!empty($existingSetting['activityemail_setting'])) {
+    $setting = $existingSetting['activityemail_setting'];
+  }
+  return $setting;
+}
+
 /**
  * Implements hook_civicrm_post().
  */
 function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
   // On Creation of an Activity
   if ($op == 'create' && $objectName == 'Activity') {
-    // Of type X
-    // TODO Create settings page to set the activity type
-    $activityTypeID = 2;
-    $groups = ["Georgia_5"];
-    $messageTemplateID = 69;
-    if ($objectRef->activity_type_id == $activityTypeID) {
+    $settings = activityemail_getsetting();
+    if (!empty($settings[$objectRef->activity_type_id]['group'])) {
+      $groups = explode(',', $settings[$objectRef->activity_type_id]['group']);
       // Get all the members of the relevant group
-      // TODO Create settings page to set the group
       try {
         $pplInGroup = civicrm_api3('Contact', 'get', [
           'sequential' => 1,
