@@ -133,6 +133,20 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       }
     }
     return $elementNames;
+
+    // $rows = array();
+    // foreach ($this->_elements as $element) {
+    //   /** @var HTML_QuickForm_Element $element */
+    //   $label = $element->getLabel();
+    //   if (!empty($label) && substr($element->getName(), 0, 7) == 'groups_') {
+    //     $rows[substr($element->getName(), 7)]['groups'] = $element->getName();
+    //   }
+    //   if (!empty($label) && substr($element->getName(), 0, 14) == 'activity_type_') {
+    //     $rows[substr($element->getName(), 14)]['act_type'] = $element->getName();
+    //   }
+    // }
+    // // print_r($rows); die();
+    // return $rows;
   }
 
 }
