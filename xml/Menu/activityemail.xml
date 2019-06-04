@@ -3,7 +3,7 @@
   <item>
     <path>civicrm/activityemail</path>
     <page_callback>CRM_Activityemail_Form_Activityemailsettings</page_callback>
-    <title>Activityemailsettings</title>
+    <title>Activity Email Settings</title>
     <access_arguments>access CiviCRM</access_arguments>
   </item>
 </menu>

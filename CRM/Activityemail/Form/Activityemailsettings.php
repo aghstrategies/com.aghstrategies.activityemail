@@ -8,16 +8,47 @@ use CRM_Activityemail_ExtensionUtil as E;
  * @see https://wiki.civicrm.org/confluence/display/CRMDOC/QuickForm+Reference
  */
 class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
-  public function buildQuickForm() {
 
-    // add form elements
-    $this->add(
-      'select', // field type
-      'favorite_color', // field name
-      'Favorite Color', // field label
-      $this->getColorOptions(), // list of options
-      TRUE // is required
-    );
+  public function activityEmailDefaults() {
+    $defaults = [];
+    try {
+      $existingSetting = civicrm_api3('Setting', 'getsingle', array(
+        'sequential' => 1,
+        'return' => 'activityemail_setting',
+      ));
+    }
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(
+        ts('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.activityemail'))
+      );
+    }
+    if (!empty($existingSetting['activityemail_setting'])) {
+      foreach ($existingSetting['activityemail_setting'] as $key => $value) {
+        $defaults['activity_type'] = $key;
+        $defaults['groups'] = explode(',', $value);
+      }
+    }
+
+    return $defaults;
+  }
+
+  public function buildQuickForm() {
+    // Use the 'option_value' entity for most "option" lists, e.g. event types, activity types, gender, individual_prefix, custom field options, etc.
+    $this->addEntityRef('activity_type', ts('Activity Type'), array(
+      'entity' => 'option_value',
+      'api' => array(
+        'params' => array('option_group_id' => 'activity_type'),
+      ),
+      'select' => array('minimumInputLength' => 0),
+    ));
+
+    $this->addEntityRef('groups', ts('Groups to Email'), array(
+      'entity' => 'Group',
+      'multiple' => TRUE,
+      'select' => array('minimumInputLength' => 0),
+    ));
+
     $this->addButtons(array(
       array(
         'type' => 'submit',
@@ -26,6 +57,8 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       ),
     ));
 
+    $defaults = self::activityEmailDefaults();
+    $this->setDefaults($defaults);
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
     parent::buildQuickForm();
@@ -33,25 +66,24 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
 
   public function postProcess() {
     $values = $this->exportValues();
-    $options = $this->getColorOptions();
-    CRM_Core_Session::setStatus(E::ts('You picked color "%1"', array(
-      1 => $options[$values['favorite_color']],
-    )));
-    parent::postProcess();
-  }
 
-  public function getColorOptions() {
-    $options = array(
-      '' => E::ts('- select -'),
-      '#f00' => E::ts('Red'),
-      '#0f0' => E::ts('Green'),
-      '#00f' => E::ts('Blue'),
-      '#f0f' => E::ts('Purple'),
-    );
-    foreach (array('1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e') as $f) {
-      $options["#{$f}{$f}{$f}"] = E::ts('Grey (%1)', array(1 => $f));
+    $params = [
+      'activityemail_setting' => [
+        $values['activity_type'] => $values['groups'],
+      ],
+    ];
+
+    try {
+      $existingSetting = civicrm_api3('Setting', 'create', $params);
+      CRM_Core_Session::setStatus(ts('Settings Successfully Saved'), ts('Activity Email'), 'success');
     }
-    return $options;
+    catch (CiviCRM_API3_Exception $e) {
+      $error = $e->getMessage();
+      CRM_Core_Error::debug_log_message(
+        ts('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.activityemail'))
+      );
+    }
+    parent::postProcess();
   }
 
   /**
