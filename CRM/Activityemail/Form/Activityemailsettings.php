@@ -25,8 +25,8 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
     }
     if (!empty($existingSetting['activityemail_setting'])) {
       foreach ($existingSetting['activityemail_setting'] as $key => $value) {
-        $defaults['activity_type'] = $key;
-        $defaults['groups'] = explode(',', $value);
+        $defaults['activity_type_' . $key] = $key;
+        $defaults['groups_' . $key] = explode(',', $value['group']);
       }
     }
 
@@ -34,8 +34,29 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
   }
 
   public function buildQuickForm() {
-    // Use the 'option_value' entity for most "option" lists, e.g. event types, activity types, gender, individual_prefix, custom field options, etc.
-    $this->addEntityRef('activity_type', ts('Activity Type'), array(
+    $defaults = self::activityEmailDefaults();
+    // Add exsisting types/groups
+    foreach ($defaults as $key => $value) {
+      if (substr($key, 0, 4) === "acti") {
+        $this->addEntityRef($key, ts('Activity Type'), array(
+          'entity' => 'option_value',
+          'api' => array(
+            'params' => array('option_group_id' => 'activity_type'),
+          ),
+          'select' => array('minimumInputLength' => 0),
+        ));
+      }
+      if (substr($key, 0, 4) === "grou") {
+        $this->addEntityRef($key, ts('Groups to Email'), array(
+          'entity' => 'Group',
+          'multiple' => TRUE,
+          'select' => array('minimumInputLength' => 0),
+        ));
+      }
+    }
+
+    // add new types/group
+    $this->addEntityRef('activity_type_new', ts('Activity Type'), array(
       'entity' => 'option_value',
       'api' => array(
         'params' => array('option_group_id' => 'activity_type'),
@@ -43,7 +64,7 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       'select' => array('minimumInputLength' => 0),
     ));
 
-    $this->addEntityRef('groups', ts('Groups to Email'), array(
+    $this->addEntityRef('groups_new', ts('Groups to Email'), array(
       'entity' => 'Group',
       'multiple' => TRUE,
       'select' => array('minimumInputLength' => 0),
@@ -52,12 +73,11 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
     $this->addButtons(array(
       array(
         'type' => 'submit',
-        'name' => E::ts('Submit'),
+        'name' => E::ts('Submit/Add More'),
         'isDefault' => TRUE,
       ),
     ));
 
-    $defaults = self::activityEmailDefaults();
     $this->setDefaults($defaults);
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
@@ -66,13 +86,19 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
 
   public function postProcess() {
     $values = $this->exportValues();
-
+    $setting = [];
+    foreach ($values as $fieldName => $value) {
+      if (substr($fieldName, 0, 7) === "groups_" && substr($fieldName, 7) !== 'new' && !empty($value)) {
+        $setting[substr($fieldName, 7)] = ['group' => $value];
+      }
+      // code...
+    }
+    if (!empty($values['groups_new']) && !empty($values['activity_type_new'])) {
+      $setting[$values['activity_type_new']] = ['group' => $values['groups_new']];
+    }
     $params = [
-      'activityemail_setting' => [
-        $values['activity_type'] => $values['groups'],
-      ],
+      'activityemail_setting' => $setting,
     ];
-
     try {
       $existingSetting = civicrm_api3('Setting', 'create', $params);
       CRM_Core_Session::setStatus(ts('Settings Successfully Saved'), ts('Activity Email'), 'success');
@@ -84,6 +110,8 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       );
     }
     parent::postProcess();
+    $url = CRM_Utils_System::url('civicrm/activityemail', 'reset=1');
+    CRM_Utils_System::redirect($url);
   }
 
   /**
