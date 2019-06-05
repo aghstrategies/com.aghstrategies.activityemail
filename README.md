@@ -12,7 +12,7 @@ Upon creation of an activity of type X, send text Y (including information from 
 When an Activity is created of a type that is set up on the settings page with a corresponding "Group/Groups To Email" then a copy of that activity will be sent to each member of the corresponding Groups To Email.
 
 ### Example
-If the settings are configured as they are in the Screenshot above
+If the settings are configured as they are in the Screenshot above then:
 
-When an Activity of type "Phone Call" is created
-Then an Email with a copy of that Activity Will be emailed to all members with emails in the Administrator Group and Georgia Group.
+>**When** an Activity of type "Phone Call" is created  
+>**Then** an Email with a copy of that Activity will be emailed to all members with emails in the Administrator Group and Georgia Group.
