@@ -88,8 +88,12 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
     $values = $this->exportValues();
     $setting = [];
     foreach ($values as $fieldName => $value) {
-      if (substr($fieldName, 0, 7) === "groups_" && substr($fieldName, 7) !== 'new' && !empty($value)) {
-        $setting[substr($fieldName, 7)] = ['group' => $value];
+      if (substr($fieldName, 0, 7) === "groups_"
+        && substr($fieldName, 7) !== 'new'
+        && !empty($value)
+        && !empty($values['activity_type_' . substr($fieldName, 7)])
+      ) {
+        $setting[$values['activity_type_' . substr($fieldName, 7)]] = ['group' => $value];
       }
       // code...
     }
