@@ -67,7 +67,7 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
           ),
           'select' => array('minimumInputLength' => 0),
         ));
-        $this->add('text', 'from_' . $actId, ts('From Header'));
+        $this->addEntityRef('from_' . $actId, ts('From Contact'));
       }
     }
     // add new types/group
@@ -98,7 +98,7 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       ),
       'select' => array('minimumInputLength' => 0),
     ));
-    $this->add('text', 'from_new', ts('From Header'));
+    $this->addEntityRef('from_new', ts('From Contact'));
 
     $this->addButtons(array(
       array(

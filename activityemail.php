@@ -3,6 +3,43 @@
 require_once 'activityemail.civix.php';
 use CRM_Activityemail_ExtensionUtil as E;
 
+/**
+ * Implements hook_civicrm_validateForm().
+ */
+function activityemail_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors) {
+  if ($formName == 'CRM_Activityemail_Form_Activityemailsettings') {
+    $row = [
+      'activity_type_',
+      'groups_',
+      'from_',
+      'message_template_',
+    ];
+    $actTypes = [];
+    foreach ($fields as $fieldName => $value) {
+      if (substr($fieldName, 0, 14) == 'activity_type_') {
+        // Check that there is only one row per Activity Type
+        $suffix = substr($fieldName, 14);
+        if (empty($actTypes[$value])) {
+          $actTypes[$value] = 'set';
+        }
+        elseif (!empty($actTypes[$value])) {
+          $errors[$fieldName] = ts('There is already a row for this Activity Type, at this time there can only be one row per activity type');
+        }
+        // Check that all fields in a row are filled OR Empty
+        $fieldFilled = 0;
+        foreach ($row as $key => $fieldPrefix) {
+          if (!empty($fields[$fieldPrefix . $suffix])) {
+            $fieldFilled = $fieldFilled + 1;
+          }
+        }
+        if ($fieldFilled == 1 || $fieldFilled == 2 || $fieldFilled == 3) {
+          $errors[$fieldName] = ts('All or none of the fields in this row must be filled');
+        }
+      }
+    }
+  }
+}
+
 function activityemail_getsetting() {
   $setting = NULL;
   try {
@@ -36,8 +73,27 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
     ) {
       // Save Settings
       $groups = explode(',', $settings[$objectRef->activity_type_id]['group']);
-      $fromEmail = $settings[$objectRef->activity_type_id]['from'];
       $messageTemplateID = $settings[$objectRef->activity_type_id]['message_template'];
+
+      try {
+        $from = civicrm_api3('Contact', 'getsingle', [
+          'return' => ["email", 'id', 'display_name'],
+          'id' => $settings[$objectRef->activity_type_id]['from'],
+        ]);
+      }
+      catch (CiviCRM_API3_Exception $e) {
+        $error = $e->getMessage();
+        CRM_Core_Error::debug_log_message(ts('API Error %1', array(
+          'domain' => 'com.aghstrategies.activityemail',
+          1 => $error,
+        )));
+      }
+      if (!empty($from['email'])) {
+        $fromEmail = $from['email'];
+      }
+      else {
+
+      }
 
       // Assemble Template Params
       $tplParams = [];
@@ -83,20 +139,17 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
 
             //Create an activity recording the sending of this email
             $activityParams = array();
-            // $activityParams['source_record_id'] = $activityId;
-            // $activityParams['source_contact_id'] = $userID;
+            $activityParams['source_record_id'] = $objectId;
+            $activityParams['source_contact_id'] = $settings[$objectRef->activity_type_id]['from'];
             $activityParams['activity_type_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'activity_type_id', 'Email');
             $activityParams['activity_date_time'] = date('YmdHis');
             $activityParams['status_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'activity_status_id', 'Completed');
             $activityParams['medium_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'encounter_medium', 'email');
             $activityParams['is_auto'] = 0;
-            // $activityParams['target_id'] = $clientId;
+            $activityParams['target_contact_id'] = $values['id'];
             $activityParams['subject'] = ts('%1 - copy sent to %2', [1 => $tplParams['activity_subject'], 2 => $values['display_name']]);
             $activityParams['details'] = $message;
-
-            // Send a copy of the activity to all contacts in the smart group
-            // $mailToContacts[$values['email']] = $values['id'];
-            // $sent = CRM_Activity_BAO_Activity::sendToAssignee($objectRef, $mailToContacts);
+            $activity = CRM_Activity_BAO_Activity::create($activityParams);
           }
         }
       }
