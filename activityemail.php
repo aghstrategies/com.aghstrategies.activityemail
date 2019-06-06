@@ -36,6 +36,24 @@ function activityemail_civicrm_validateForm($formName, &$fields, &$files, &$form
           $errors[$fieldName] = ts('All or none of the fields in this row must be filled');
         }
       }
+      // Check that the from email contact selected has a primary email
+      if (substr($fieldName, 0, 5) == 'from_') {
+        try {
+          $from = civicrm_api3('Contact', 'getsingle', array(
+            'id' => $value,
+            'return' => 'email',
+          ));
+        }
+        catch (CiviCRM_API3_Exception $e) {
+          $error = $e->getMessage();
+          CRM_Core_Error::debug_log_message(
+            ts('API Error: %1', array(1 => $error, 'domain' => 'com.aghstrategies.activityemail'))
+          );
+        }
+        if (empty($from['email'])) {
+          $errors[$fieldName] = ts('The From Email Contact must have a primary email address set.');
+        }
+      }
     }
   }
 }
