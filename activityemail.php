@@ -34,14 +34,25 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
       && !empty($settings[$objectRef->activity_type_id]['from'])
       && !empty($settings[$objectRef->activity_type_id]['message_template'])
     ) {
+      // Save Settings
       $groups = explode(',', $settings[$objectRef->activity_type_id]['group']);
       $fromEmail = $settings[$objectRef->activity_type_id]['from'];
       $messageTemplateID = $settings[$objectRef->activity_type_id]['message_template'];
+
+      // Assemble Template Params
+      $tplParams = [];
+      $tplParams['activityTypeName'] = CRM_Core_PseudoConstant::getLabel('CRM_Activity_DAO_Activity', 'activity_type_id', $objectRef->activity_type_id);
+      foreach ($objectRef as $key => $value) {
+        if (substr($key, 0, 1) !== '_') {
+          $tplParams['activity_' . $key] = $value;
+        }
+      }
+
       // Get all the members of the relevant group
       try {
         $pplInGroup = civicrm_api3('Contact', 'get', [
           'sequential' => 1,
-          'return' => ["email", 'id'],
+          'return' => ["email", 'id', 'display_name'],
           'group' => ['IN' => $groups],
           'email' => ['IS NOT NULL' => 1],
           'do_not_email' => 0,
@@ -54,6 +65,8 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
           1 => $error,
         )));
       }
+
+      // send an email to each member of the group
       if (!empty($pplInGroup['values'])) {
         foreach ($pplInGroup['values'] as $key => $values) {
           if (!empty($values['email'])) {
@@ -62,9 +75,24 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
               'from' => $fromEmail,
               'messageTemplateID' => $messageTemplateID,
               'toEmail' => $values['email'],
+              'toName' => $values['display_name'],
               'contactId' => $values['id'],
+              'tplParams' => $tplParams,
             ];
             list($sent, $subject, $message, $html) = CRM_Core_BAO_MessageTemplate::sendTemplate($sendTemplateParams);
+
+            //Create an activity recording the sending of this email
+            $activityParams = array();
+            // $activityParams['source_record_id'] = $activityId;
+            // $activityParams['source_contact_id'] = $userID;
+            $activityParams['activity_type_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'activity_type_id', 'Email');
+            $activityParams['activity_date_time'] = date('YmdHis');
+            $activityParams['status_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'activity_status_id', 'Completed');
+            $activityParams['medium_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'encounter_medium', 'email');
+            $activityParams['is_auto'] = 0;
+            // $activityParams['target_id'] = $clientId;
+            $activityParams['subject'] = ts('%1 - copy sent to %2', [1 => $tplParams['activity_subject'], 2 => $values['display_name']]);
+            $activityParams['details'] = $message;
 
             // Send a copy of the activity to all contacts in the smart group
             // $mailToContacts[$values['email']] = $values['id'];
