@@ -36,7 +36,7 @@
   Message Template
 </div>
 <div class="crm-section header">
-  From Email Header
+  From Contact (must have primary email)
 </div>
 {foreach from=$elementNames item=elementName}
   <div class="crm-section">

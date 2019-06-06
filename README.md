@@ -17,10 +17,8 @@ When an Activity is created of a type that is set up on the settings page with a
 If the settings are configured as they are in the Screenshot above then:
 
 >**When** an Activity of type "Phone Call" is created  
->**Then** an Email with a copy of that Activity will be emailed to all members with emails in the Administrator Group and Georgia Group.
+>**Then** an Email will be sent to all members of the Administrator Group Primary email addresses using the Message Template "Test" from the Contact "1,1".
 
 ### Wishlist features
-1. Validation on settings form
-  + Must have all fields filled for that row
-  + only one row per activity type
+1. Allow multiple rows per activity type
 2. Fix Message Template input field Search
