@@ -27,6 +27,8 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       foreach ($existingSetting['activityemail_setting'] as $key => $value) {
         $defaults['activity_type_' . $key] = $key;
         $defaults['groups_' . $key] = explode(',', $value['group']);
+        $defaults['from_' . $key] = $value['from'];
+        $defaults['message_template_' . $key] = $value['message_template'];
       }
     }
 
@@ -35,9 +37,11 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
 
   public function buildQuickForm() {
     $defaults = self::activityEmailDefaults();
+    // print_r($defaults); die();
     // Add exsisting types/groups
     foreach ($defaults as $key => $value) {
-      if (substr($key, 0, 4) === "acti") {
+      if (substr($key, 0, 14) === "activity_type_") {
+        $actId = substr($key, 14);
         $this->addEntityRef($key, ts('Activity Type'), array(
           'entity' => 'option_value',
           'api' => array(
@@ -45,16 +49,27 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
           ),
           'select' => array('minimumInputLength' => 0),
         ));
-      }
-      if (substr($key, 0, 4) === "grou") {
-        $this->addEntityRef($key, ts('Groups to Email'), array(
+        $this->addEntityRef('groups_' . $actId, ts('Groups to Email'), array(
           'entity' => 'Group',
           'multiple' => TRUE,
           'select' => array('minimumInputLength' => 0),
         ));
+        $this->addEntityRef('message_template_' . $actId, ts('Message Template'), array(
+          'entity' => 'MessageTemplate',
+          'api' => array(
+            "label_field" => "msg_title",
+            'input' => "msg_title",
+            'params' => [
+              'is_active' => 1,
+              'is_default' => 1,
+              'options' => ['limit' => ""],
+            ],
+          ),
+          'select' => array('minimumInputLength' => 0),
+        ));
+        $this->add('text', 'from_' . $actId, ts('From Header'));
       }
     }
-
     // add new types/group
     $this->addEntityRef('activity_type_new', ts('Activity Type'), array(
       'entity' => 'option_value',
@@ -69,6 +84,21 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
       'multiple' => TRUE,
       'select' => array('minimumInputLength' => 0),
     ));
+
+    $this->addEntityRef('message_template_new', ts('Message Template'), array(
+      'entity' => 'MessageTemplate',
+      'api' => array(
+        "label_field" => "msg_title",
+        'input' => "msg_title",
+        'params' => [
+          'is_active' => 1,
+          'is_default' => 1,
+          'options' => ['limit' => ""],
+        ],
+      ),
+      'select' => array('minimumInputLength' => 0),
+    ));
+    $this->add('text', 'from_new', ts('From Header'));
 
     $this->addButtons(array(
       array(
@@ -94,11 +124,23 @@ class CRM_Activityemail_Form_Activityemailsettings extends CRM_Core_Form {
         && !empty($values['activity_type_' . substr($fieldName, 7)])
       ) {
         $setting[$values['activity_type_' . substr($fieldName, 7)]] = ['group' => $value];
+        if (!empty($values['from_' . substr($fieldName, 7)])) {
+          $setting[$values['activity_type_' . substr($fieldName, 7)]]['from'] = $values['from_' . substr($fieldName, 7)];
+        }
+        if (!empty($values['message_template_' . substr($fieldName, 7)])) {
+          $setting[$values['activity_type_' . substr($fieldName, 7)]]['message_template'] = $values['message_template_' . substr($fieldName, 7)];
+        }
       }
       // code...
     }
     if (!empty($values['groups_new']) && !empty($values['activity_type_new'])) {
       $setting[$values['activity_type_new']] = ['group' => $values['groups_new']];
+      if (!empty($values['from_new'])) {
+        $setting[$values['activity_type_new']]['from'] = $values['from_new'];
+      }
+      if (!empty($values['message_template_new'])) {
+        $setting[$values['activity_type_new']]['message_template'] = $values['message_template_new'];
+      }
     }
     $params = [
       'activityemail_setting' => $setting,

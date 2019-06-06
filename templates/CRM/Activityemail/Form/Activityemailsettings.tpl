@@ -11,7 +11,7 @@
 }
 .crm-section {
   display: inline-block;
-  width: 40%;
+  width: 23%;
 }
 .header {
   font-weight: bold;
@@ -31,6 +31,12 @@
 </div>
 <div class="crm-section header">
   Groups To Email
+</div>
+<div class="crm-section header">
+  Message Template
+</div>
+<div class="crm-section header">
+  From Email Header
 </div>
 {foreach from=$elementNames item=elementName}
   <div class="crm-section">
