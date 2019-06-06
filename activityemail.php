@@ -58,6 +58,10 @@ function activityemail_civicrm_validateForm($formName, &$fields, &$files, &$form
   }
 }
 
+/**
+ * Get Activity Email Settings
+ * @return array Activity Email Settings
+ */
 function activityemail_getsetting() {
   $setting = NULL;
   try {
@@ -115,7 +119,7 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
 
       // Assemble Template Params
       $tplParams = [];
-      $tplParams['activityTypeName'] = CRM_Core_PseudoConstant::getLabel('CRM_Activity_DAO_Activity', 'activity_type_id', $objectRef->activity_type_id);
+      $tplParams['activity_type_name'] = CRM_Core_PseudoConstant::getLabel('CRM_Activity_DAO_Activity', 'activity_type_id', $objectRef->activity_type_id);
       foreach ($objectRef as $key => $value) {
         if (substr($key, 0, 1) !== '_') {
           $tplParams['activity_' . $key] = $value;

@@ -9,9 +9,44 @@ Upon creation of an activity of type X, send text Y (including information from 
 ![screenshot of settings page.](images/settingsPage.png)
 
 ## How It Works
-When an Activity is created of a type that is set up on the settings page with a corresponding "Group/Groups To Email" then a copy of that activity will be sent to each member of the corresponding Groups To Email from the From Email using the Message Template set for that row.
+When an Activity is created of a type that is set up on the settings page
+then a copy of that activity will be sent to each member of the corresponding `Groups To Email` field
+from the `From Contact`
+using the Message Template selected for that row.
 
 ## Tokens Available to the Message Template
+Contact Tokens for the Contact being emailed will be available to the message template as per usual. ex: {contact.first_name}
+
+Additionally the following Activity Tokens can be used:
+
+{$activity_type_name}  
+{$activity_id}  
+{$activity_source_record_id}  
+{$activity_activity_type_id}  
+{$activity_subject}  
+{$activity_activity_date_time}  
+{$activity_duration}  
+{$activity_location}  
+{$activity_phone_id}  
+{$activity_phone_number}  
+{$activity_details}  
+{$activity_status_id}  
+{$activity_priority_id}  
+{$activity_parent_id}  
+{$activity_is_test}  
+{$activity_medium_id}  
+{$activity_is_auto}  
+{$activity_relationship_id}  
+{$activity_is_current_revision}  
+{$activity_original_id}  
+{$activity_result}  
+{$activity_is_deleted}  
+{$activity_campaign_id}  
+{$activity_engagement_level}  
+{$activity_weight}  
+{$activity_is_star}  
+{$activity_created_date}  
+{$activity_modified_date}  
 
 ### Example
 If the settings are configured as they are in the Screenshot above then:
