@@ -114,7 +114,7 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
         $fromEmail = $from['email'];
       }
       else {
-
+        CRM_Core_Session::setStatus(ts('Activity Emails not sent because no From email is set'), ts('Activity Email'), 'error');
       }
 
       // Assemble Template Params
@@ -125,6 +125,8 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
           $tplParams['activity_' . $key] = $value;
         }
       }
+      $custom = CRM_Utils_Token::getCustomFieldTokens('Activity');
+      $tplParams = array_merge($tplParams, $custom);
 
       // Get all the members of the relevant group
       try {

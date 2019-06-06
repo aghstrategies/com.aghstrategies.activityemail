@@ -49,6 +49,9 @@ Additionally the following Activity Tokens can be used:
 {$activity_created_date}  
 {$activity_modified_date}  
 
+And any custom fields as
+{$custom_#}
+
 ### Example
 If the settings are configured as they are in the Screenshot above then:
 
