@@ -169,7 +169,7 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
             $activityParams['medium_id'] = CRM_Core_PseudoConstant::getKey('CRM_Activity_DAO_Activity', 'encounter_medium', 'email');
             $activityParams['is_auto'] = 0;
             $activityParams['target_contact_id'] = $values['id'];
-            $activityParams['subject'] = ts('%1 - copy sent to %2', [1 => $tplParams['activity_subject'], 2 => $values['display_name']]);
+            $activityParams['subject'] = ts('details of %1 - sent to %2', [1 => $tplParams['activity_subject'], 2 => $values['display_name']]);
             $activityParams['details'] = $message;
             $activity = CRM_Activity_BAO_Activity::create($activityParams);
           }

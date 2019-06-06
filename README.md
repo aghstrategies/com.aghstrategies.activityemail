@@ -13,6 +13,7 @@ When an Activity is created of a type that is set up on the settings page
 then a copy of that activity will be sent to each member of the corresponding `Groups To Email` field
 from the `From Contact`
 using the Message Template selected for that row.
+Additionally, for each email sent an activity of "Email" will be created on the Contact that the email was sent to.
 
 ## Tokens Available to the Message Template
 Contact Tokens for the Contact being emailed will be available to the message template as per usual. ex: {contact.first_name}
