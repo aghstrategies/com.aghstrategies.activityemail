@@ -136,6 +136,7 @@ function activityemail_civicrm_post($op, $objectName, $objectId, &$objectRef) {
           'group' => ['IN' => $groups],
           'email' => ['IS NOT NULL' => 1],
           'do_not_email' => 0,
+          'options' => ['limit' => ""],
         ]);
       }
       catch (CiviCRM_API3_Exception $e) {
